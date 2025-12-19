@@ -1,0 +1,232 @@
+# ==============================================================================
+# Editor and IDE Configuration
+# ==============================================================================
+# VS Code
+/.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Trae
+/.trae/
+.trae/*
+
+# JetBrains IDEs (IntelliJ, PyCharm, etc.)
+/.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Emacs
+*~
+
+# Vim
+*.swp
+*.swo
+
+# ==============================================================================
+# Python Specific
+# ==============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.mypy_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+pytestdebug.log
+
+# Python virtual environments
+venv/
+env/
+env2/
+envs/
+pyvenv.cfg
+
+# Pyrefly
+pyrefly.toml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Documentation
+/docs/_build/
+/docs/_autosummary/
+build/docs/
+
+# ==============================================================================
+# Deep Learning and Machine Learning
+# ==============================================================================
+# PyTorch
+*.pt
+*.pth
+*.torch
+*.model
+*.safetensors
+
+# TensorFlow
+*.pb
+*.meta
+*.ckpt
+*.tfevents*
+
+# Models and checkpoints
+checkpoints/
+models/
+*.onnx
+!cfgan/models/
+
+# TensorBoard
+runs/
+
+# ==============================================================================
+# Data and Results
+# ==============================================================================
+# Datasets
+datasets/
+!cfgan/datasets/
+
+# Results and outputs
+results/
+outputs/
+logs/
+
+# Image data
+*.tif
+*.tiff
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.gif
+
+# Pickle files
+*.pkl
+*.pickle
+
+# ==============================================================================
+# Environment and OS Files
+# ==============================================================================
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==============================================================================
+# Logs and Temporary Files
+# ==============================================================================
+# Log files
+*.log
+*.log.*
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.old
+
+# Cached files
+.cache/
+.temp/
+.tmp/
+
+# ==============================================================================
+# Miscellaneous
+# ==============================================================================
+# Package files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.rar
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+
+# Lock files
+*.lock
+package-lock.json
+yarn.lock
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

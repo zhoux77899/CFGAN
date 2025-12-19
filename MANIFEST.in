@@ -1,0 +1,11 @@
+include README.md
+include LICENSE
+include requirements.txt
+include pyproject.toml
+include CODE_OF_CONDUCT.md
+recursive-include cfgan *.py
+recursive-include docs *
+recursive-exclude tests *
+global-exclude *.pyc
+global-exclude .DS_Store
+global-exclude __pycache__

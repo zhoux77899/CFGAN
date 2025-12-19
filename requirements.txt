@@ -1,0 +1,16 @@
+numpy>=2.0.0
+torch>=2.5.1
+torchvision>=0.20.1
+scipy
+pyyaml
+tqdm
+rich
+matplotlib
+Pillow
+tensorboard
+scikit-image
+scikit-learn
+psutil
+matplotlib_scalebar
+pytorch_msssim
+tifffile

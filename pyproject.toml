@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cfgan"
+version = "0.1.0"
+description = "CFGAN: Cross-Filter Generative Adversarial Network Framework for Microscopy Image Processing"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+  { name = "zhoux77899", email = "zhouxiang100@huawei.com" }
+]
+maintainers = [
+  { name = "zhoux77899", email = "zhouxiang100@huawei.com" }
+]
+keywords = ["GAN", "image-processing", "microscopy", "deep-learning", "pytorch"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Image Processing",
+  "Intended Audience :: Science/Research"
+]
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=2.0.0",
+  "torch>=2.5.1",
+  "torchvision>=0.20.1",
+  "scipy",
+  "pyyaml",
+  "tqdm",
+  "rich",
+  "matplotlib",
+  "Pillow",
+  "tensorboard",
+  "scikit-image",
+  "scikit-learn",
+  "psutil",
+  "matplotlib_scalebar",
+  "pytorch_msssim",
+  "tifffile",
+]
+
+[project.urls]
+"Bug Reports" = "https://github.com/zhoux77899/CFGAN/issues"
+"Source" = "https://github.com/zhoux77899/CFGAN"
+
+[tool.setuptools.packages.find]
+include = ["cfgan*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+
+[tool.pytest.ini_options]
+pythonpath = [".", "cfgan"]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+strict = false

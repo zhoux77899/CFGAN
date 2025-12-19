@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_2" data-name="图层 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160.82 40.52">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #000;
+        font-family: Bahnschrift, Bahnschrift;
+        font-size: 36px;
+        font-variation-settings: 'wght' 400, 'wdth' 100;
+      }
+
+      .cls-2 {
+        letter-spacing: 0em;
+      }
+
+      .cls-3 {
+        letter-spacing: -.03em;
+      }
+
+      .cls-4 {
+        fill: #36aba9;
+        stroke-width: 0px;
+      }
+    </style>
+  </defs>
+  <g id="_图层_2-2" data-name="图层 2">
+    <path class="cls-4" d="M23.19,2.34l-3.67,3.67c-.78.78-2.05.78-2.83,0l-3.67-3.67C10.12-.56,5.35-.85,2.36,1.96s-3.15,7.78-.17,10.77l3.89,3.89c.78.78.78,2.05,0,2.83l-3.67,3.67c-2.9,2.9-3.2,7.67-.38,10.66s7.78,3.15,10.77.17l3.89-3.89c.78-.78,2.05-.78,2.83,0l3.67,3.67c2.9,2.9,7.67,3.2,10.66.38s3.15-7.78.17-10.77l-3.89-3.89c-.78-.78-.78-2.05,0-2.83l3.89-3.89c2.98-2.98,2.93-7.85-.17-10.77s-7.76-2.52-10.66.38Z"/>
+    <text class="cls-1" transform="translate(45.71 30.78)"><tspan class="cls-2" x="0" y="0">C</tspan><tspan x="21.92" y="0">F</tspan><tspan class="cls-3" x="42.05" y="0">G</tspan><tspan x="64.27" y="0">AN</tspan></text>
+  </g>
+</svg>

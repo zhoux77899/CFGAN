@@ -1,0 +1,65 @@
+# Configuration file for CFGAN
+
+cfgan_dataset:
+  # directory of standard image
+  std_dir: datasets/standard
+  # directory of random localization data
+  loc_dir: datasets/image/a2_loc
+  # directory of random localized PSFs
+  psf_dir: datasets/image/a4_psf
+  # directory of random localized images
+  img_dir: datasets/image/a6_img
+
+terminator_dataset:
+  # directory of residual image
+  residual_dir: datasets/residual
+
+filter:
+  # cross-filter arguments
+  filter_args: {"fraction": [0.15, 0.60], "rotation": -22.5, "types": "ri", "gaussian_radius": 1.25}
+
+model:
+  # CFGAN weight
+  model_path: checkpoints/model-generator.safetensors
+
+env:
+  # pitch of camera
+  pitch: 0.08
+  # limit on one side of molecule axial position
+  limit: 4.0
+  # bias of the center molecule axial position
+  bias: 4.0
+  # standard image size
+  std_size: 1282
+  # standard image step
+  std_step: 0.01
+  # clip image size
+  clip_size: 256
+  # clip bias
+  clip_bias: 2
+  # tiny value
+  tiny: 1e-09
+  # threshold
+  threshold: 0.2
+
+trainer:
+  # training epoches
+  num_epochs: 500
+  # training batches
+  num_batches: 10
+  # training workers
+  num_workers: 0
+  # training gpus
+  num_gpus: 1
+  # training learning rate
+  learning_rate: 0.0002
+  # training adam beta1
+  adam_beta1: 0.9
+  # training adam beta2
+  adam_beta2: 0.999
+  # training adam eps
+  adam_eps: 1e-08
+  # directory of trained weights
+  save_dir: checkpoints/save
+  # directory of cache weights
+  temp_dir: checkpoints/temp
