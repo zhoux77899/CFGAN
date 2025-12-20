@@ -1,7 +1,7 @@
 # TODO)) Include in `slitflow` pipeline in the future
 import copy
 import time
-from typing import Union, Tuple, List, Any, Optional
+from typing import Any, List, Optional, Tuple, Union
 
 import numpy as np
 import scipy
@@ -12,22 +12,22 @@ from sklearn.linear_model import LinearRegression
 from ..common.env import ENV
 from ..common.img import get_background
 from ..common.logging import logger
-from ..common.utils import get_image_size, set_image_dimension, normalize
-from ..math.geometry import Point, Line, get_intersection
+from ..common.utils import get_image_size, normalize, set_image_dimension
+from ..math.geometry import Line, Point, get_intersection
 from ..math.registration import (
     axial_position_registration,
+    differential_cross_correlation,
     normalized_cross_correlation,
-    differential_cross_correlation
 )
 from ..models.modeling_terminator import Terminator
 
 
 def lateral_localization(
-        reference_image: Union[np.ndarray, torch.Tensor],
-        moving_image: Union[np.ndarray, torch.Tensor],
-        centers: Union[float, Tuple[float, float], List[float]] = 0.0,
-        pitch: Optional[float] = ENV.pitch,
-        threshold: Optional[float] = ENV.threshold,
+    reference_image: Union[np.ndarray, torch.Tensor],
+    moving_image: Union[np.ndarray, torch.Tensor],
+    centers: Union[float, Tuple[float, float], List[float]] = 0.0,
+    pitch: Optional[float] = ENV.pitch,
+    threshold: Optional[float] = ENV.threshold,
 ) -> Tuple[float, float]:
     r"""
     Calculate the lateral displacement between two images.
@@ -72,10 +72,7 @@ def lateral_localization(
         moving_image[moving_mask] = 0.0
 
     shifts, error, phase_diff = phase_cross_correlation(
-        reference_image,
-        moving_image,
-        disambiguate=True,
-        upsample_factor=8
+        reference_image, moving_image, disambiguate=True, upsample_factor=8
     )
     x_shift, y_shift = [-s for s in shifts[::-1]]
 
@@ -91,16 +88,16 @@ def lateral_localization(
 
 
 def axial_localization(
-        reference_images: Union[np.ndarray, torch.Tensor],
-        moving_image: Union[np.ndarray, torch.Tensor],
-        lateral_shift: Union[List[float], Tuple[float, float]],
-        start: float,
-        reference_range: Union[List[float], np.ndarray, torch.Tensor],
-        search_length: float = 0.1,
-        delay: int = 100,
-        centers: Union[float, Tuple[float, float], Tuple[float, float, float], List[float]] = 0.0,
-        pitch: Optional[float] = ENV.pitch,
-        threshold: float = ENV.threshold
+    reference_images: Union[np.ndarray, torch.Tensor],
+    moving_image: Union[np.ndarray, torch.Tensor],
+    lateral_shift: Union[List[float], Tuple[float, float]],
+    start: float,
+    reference_range: Union[List[float], np.ndarray, torch.Tensor],
+    search_length: float = 0.1,
+    delay: int = 100,
+    centers: Union[float, Tuple[float, float], Tuple[float, float, float], List[float]] = 0.0,
+    pitch: Optional[float] = ENV.pitch,
+    threshold: float = ENV.threshold,
 ) -> float:
     r"""
     Calculate the depth position of the moving image within the reference image sequence.
@@ -154,18 +151,10 @@ def axial_localization(
 
     while search_flag and time.perf_counter() - start_time < delay:
         z_registration, normalized_corr_registration, normalized_corr_list = axial_position_registration(
-            reference_images,
-            moving_image,
-            lateral_shift,
-            start,
-            reference_range,
-            search_length,
-            threshold=threshold
+            reference_images, moving_image, lateral_shift, start, reference_range, search_length, threshold=threshold
         )
         position_condition = np.abs(z_registration - start) <= search_length
-        correlation_condition = np.abs(
-            normalized_corr_registration - np.max(normalized_corr_list)
-        ) < np.abs(
+        correlation_condition = np.abs(normalized_corr_registration - np.max(normalized_corr_list)) < np.abs(
             normalized_corr_registration - np.min(normalized_corr_list)
         )
         if normalized_corr_registration == 0:
@@ -183,11 +172,7 @@ def axial_localization(
     return z_registration if z_registration else start
 
 
-def relocate_image(
-        image_a: np.ndarray,
-        image_b: np.ndarray,
-        shift_limit: Optional[int] = None
-) -> np.ndarray:
+def relocate_image(image_a: np.ndarray, image_b: np.ndarray, shift_limit: Optional[int] = None) -> np.ndarray:
     """
     Aligns `image_b` to `image_a` using phase cross-correlation with optional shift limiting.
 
@@ -208,10 +193,10 @@ def relocate_image(
 
 
 def intensity_fitting(
-        moving_image: Union[np.ndarray, torch.Tensor],
-        fitting_image: Union[np.ndarray, torch.Tensor],
-        threshold: float = None,
-        use_fitting: bool = False
+    moving_image: Union[np.ndarray, torch.Tensor],
+    fitting_image: Union[np.ndarray, torch.Tensor],
+    threshold: float = None,
+    use_fitting: bool = False,
 ) -> float:
     """
     Perform intensity fitting between two images to find the optimal scaling factor.
@@ -230,8 +215,7 @@ def intensity_fitting(
 
     intensity_ratio_range: np.ndarray = np.arange(0.01, 2 * moving_image.max() / fitting_image.max(), 0.01)
     intensity_ratio_corr: List[float] = [
-        differential_cross_correlation(moving_image, fitting_image * i, threshold)
-        for i in intensity_ratio_range
+        differential_cross_correlation(moving_image, fitting_image * i, threshold) for i in intensity_ratio_range
     ]
 
     if not use_fitting:
@@ -265,10 +249,10 @@ class Localizer:
     """
 
     def __init__(
-            self,
-            reference_images: Union[np.ndarray, torch.Tensor],
-            moving_image: Union[np.ndarray, torch.Tensor],
-            **kwargs: Any
+        self,
+        reference_images: Union[np.ndarray, torch.Tensor],
+        moving_image: Union[np.ndarray, torch.Tensor],
+        **kwargs: Any,
     ) -> None:
         self.reference_rot90 = kwargs.pop("reference_rot90", False)
         self.moving_rot90 = kwargs.pop("moving_rot90", False)
@@ -325,7 +309,7 @@ class Localizer:
             for y in self.y_shift:
                 for x in self.x_shift:
                     ref_img = normalize(copy.deepcopy(self.reference_images[z]))
-                    mov_img = normalize(copy.deepcopy(self.moving_image)[y:y + self.ref_len, x:x + self.ref_len])
+                    mov_img = normalize(copy.deepcopy(self.moving_image)[y : y + self.ref_len, x : x + self.ref_len])
                     loc_img = relocate_image(mov_img, ref_img, 2 * self.dxy)
                     corr = normalized_cross_correlation(loc_img, mov_img, 0.00)
                     correlation_grid.append(corr)
@@ -337,18 +321,10 @@ class Localizer:
 
         return correlation_grid
 
-    def lateral_position_fitting(
-            self,
-            corr_3d_grid: np.ndarray,
-            axial_corr_arg: int
-    ) -> Tuple[float, float]:
+    def lateral_position_fitting(self, corr_3d_grid: np.ndarray, axial_corr_arg: int) -> Tuple[float, float]:
         corr_2d_grid = corr_3d_grid[axial_corr_arg].squeeze()
         interp = scipy.interpolate.RegularGridInterpolator(
-            (self.x_shift, self.y_shift),
-            corr_2d_grid,
-            method="linear",
-            bounds_error=False,
-            fill_value=None
+            (self.x_shift, self.y_shift), corr_2d_grid, method="linear", bounds_error=False, fill_value=None
         )
 
         x_shift_fit = y_shift_fit = np.round(np.arange(0, self.pad_len + ENV.tiny, 0.1), 1)
@@ -361,15 +337,11 @@ class Localizer:
 
         return x_pos, y_pos
 
-    def all_position_localization(
-            self,
-            corr_3d_grid: np.ndarray,
-            axial_corr_arg: int
-    ) -> Tuple[float, float, float]:
+    def all_position_localization(self, corr_3d_grid: np.ndarray, axial_corr_arg: int) -> Tuple[float, float, float]:
         reference_image = self.reference_images[self.z_shift[axial_corr_arg].item()]
 
         x_pos, y_pos = self.lateral_position_fitting(corr_3d_grid, axial_corr_arg)
-        moving_image = self.moving_image[int(y_pos):int(y_pos) + self.ref_len, int(x_pos):int(x_pos) + self.ref_len]
+        moving_image = self.moving_image[int(y_pos) : int(y_pos) + self.ref_len, int(x_pos) : int(x_pos) + self.ref_len]
         x_calib, y_calib = lateral_localization(reference_image, moving_image, pitch=None, threshold=None)
         calib_limit = self.dxy * 2
         x_calib, y_calib = [min(max(c, -abs(calib_limit)), abs(calib_limit)) for c in [x_calib, y_calib]]
@@ -380,7 +352,7 @@ class Localizer:
             lateral_shift=[0, 0],
             start=self.reference_range[self.z_shift[axial_corr_arg]].item(),
             reference_range=self.reference_range,
-            pitch=None
+            pitch=None,
         )
 
         return x_pos + x_calib, y_pos + y_calib, z_pos
@@ -407,10 +379,7 @@ class Localizer:
                 reference_image = normalize(reference_image)
                 moving_image = normalize(moving_image)
 
-            intensity = intensity_fitting(
-                moving_image,
-                reference_image
-            )
+            intensity = intensity_fitting(moving_image, reference_image)
             residual_image = moving_image - reference_image * intensity
             image_diff.append(residual_image.min())
 
@@ -443,11 +412,11 @@ class LocalizationPipeline:
     """
 
     def __init__(
-            self,
-            reference_images: Union[np.ndarray, torch.Tensor],
-            moving_image: Union[np.ndarray, torch.Tensor],
-            terminator: str,
-            **kwargs: Any
+        self,
+        reference_images: Union[np.ndarray, torch.Tensor],
+        moving_image: Union[np.ndarray, torch.Tensor],
+        terminator: str,
+        **kwargs: Any,
     ) -> None:
         self.reference_images = reference_images
         self.moving_image = moving_image
@@ -490,24 +459,19 @@ class LocalizationPipeline:
         moving_image = copy.deepcopy(self.moving_image)
 
         iters: int = 0
-        has_emitters: bool = self.terminator(
-            set_image_dimension(torch.from_numpy(moving_image).to(torch.float32), 4)
-        ) > 0.5
+        has_emitters: bool = (
+            self.terminator(set_image_dimension(torch.from_numpy(moving_image).to(torch.float32), 4)) > 0.5
+        )
         reach_max_iters: bool = iters >= self.coarse_max_iters > 0
         while has_emitters and not reach_max_iters:
             iters += 1
             localizer = Localizer(reference_images, moving_image, **self.localizer_args)
             x_pos, y_pos, z_pos = localizer.needle_in_a_haystack_localization()
-            moving_image = self._fit_residual_image(
-                reference_images,
-                moving_image,
-                [x_pos, y_pos, z_pos],
-                localizer
-            )
+            moving_image = self._fit_residual_image(reference_images, moving_image, [x_pos, y_pos, z_pos], localizer)
             self.coarse_positions.append([x_pos, y_pos, z_pos])
-            has_emitters = self.terminator(
-                set_image_dimension(torch.from_numpy(moving_image).to(torch.float32), 4)
-            ) > 0.5
+            has_emitters = (
+                self.terminator(set_image_dimension(torch.from_numpy(moving_image).to(torch.float32), 4)) > 0.5
+            )
             reach_max_iters = iters >= self.coarse_max_iters > 0
 
     def fine_localization_round(self) -> None:
@@ -525,37 +489,31 @@ class LocalizationPipeline:
             localizer = Localizer(reference_images, moving_image, **self.localizer_args)
             for j in range(len(positions)):
                 if i != j:
-                    moving_image = self._fit_residual_image(
-                        reference_images,
-                        moving_image,
-                        positions[j],
-                        localizer
-                    )
+                    moving_image = self._fit_residual_image(reference_images, moving_image, positions[j], localizer)
             localizer = Localizer(reference_images, moving_image, **self.localizer_args)
             x_pos, y_pos, z_pos = localizer.right_under_your_nose_localization()
             self.fine_positions.append([x_pos, y_pos, z_pos])
 
     @staticmethod
     def check_position(
-            positions: Union[List[float], Tuple[float, float, float]],
-            limits: Union[List[float], Tuple[float, float, float]]
+        positions: Union[List[float], Tuple[float, float, float]],
+        limits: Union[List[float], Tuple[float, float, float]],
     ) -> List[float]:
         return [min(max(position, 0), limit) for position, limit in zip(positions, limits)]
 
     def _fit_residual_image(
-            self,
-            reference_images: Union[np.ndarray, torch.Tensor],
-            moving_image: Union[np.ndarray, torch.Tensor],
-            positions: Union[List[float], Tuple[float, float, float]],
-            localizer: Localizer,
-            remove_ratio: float = 0.0
+        self,
+        reference_images: Union[np.ndarray, torch.Tensor],
+        moving_image: Union[np.ndarray, torch.Tensor],
+        positions: Union[List[float], Tuple[float, float, float]],
+        localizer: Localizer,
+        remove_ratio: float = 0.0,
     ) -> Union[np.ndarray, torch.Tensor]:
         ref_rot90 = self.localizer_args.get("reference_rot90", False)
         mov_rot90 = self.localizer_args.get("moving_rot90", False)
 
         x_pos, y_pos, z_pos = self.check_position(
-            positions,
-            [localizer.pad_len, localizer.pad_len, ENV.bias + ENV.limit]
+            positions, [localizer.pad_len, localizer.pad_len, ENV.bias + ENV.limit]
         )
         x_start, x_end = int(x_pos), int(x_pos) + localizer.ref_len
         y_start, y_end = int(y_pos), int(y_pos) + localizer.ref_len
@@ -575,11 +533,11 @@ class LocalizationPipeline:
                 reference_image,
                 disambiguate=True,
                 upsample_factor=1,
-                normalization=normalization_param
+                normalization=normalization_param,
             )
             shifted_reference_image = scipy.ndimage.shift(reference_image, ref_shifts, order=1, mode="nearest")
             intensity = intensity_fitting(clipped_moving_image, shifted_reference_image, use_fitting=True)
-            if np.linalg.norm(ref_shifts) <= np.sqrt(8)  * localizer.dxy and intensity > 0:
+            if np.linalg.norm(ref_shifts) <= np.sqrt(8) * localizer.dxy and intensity > 0:
                 break
         else:
             logger.info(f"shifts of reference image {ref_shifts.tolist()} exceeds limit, changed to default [0, 0]")

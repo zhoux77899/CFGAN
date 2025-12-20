@@ -1,5 +1,5 @@
 import copy
-from typing import Union, List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 import scipy
@@ -8,16 +8,13 @@ import torch
 from cfgan.common.img import get_background
 from cfgan.common.logging import logger
 
-
 STD_IMAGES_STEP = 0.01
 EPS = 1e-09
 SI = 1e03
 
 
 def cross_correlation_pre_process(
-        image_a: Union[np.ndarray, torch.Tensor],
-        image_b: Union[np.ndarray, torch.Tensor],
-        threshold: float = None
+    image_a: Union[np.ndarray, torch.Tensor], image_b: Union[np.ndarray, torch.Tensor], threshold: float = None
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Pre-process two images for cross-correlation analysis.
@@ -45,9 +42,9 @@ def cross_correlation_pre_process(
 
 
 def normalized_cross_correlation(
-        reference_image: Union[np.ndarray, torch.Tensor],
-        moving_image: Union[np.ndarray, torch.Tensor],
-        threshold: float = None
+    reference_image: Union[np.ndarray, torch.Tensor],
+    moving_image: Union[np.ndarray, torch.Tensor],
+    threshold: float = None,
 ) -> float:
     r"""
     Calculate the Normalized Cross Correlation (NCC) similarity between two images as
@@ -66,15 +63,15 @@ def normalized_cross_correlation(
     reference_image, moving_image = cross_correlation_pre_process(reference_image, moving_image, threshold)
 
     cross_corr = np.sum(reference_image * moving_image)
-    normalized_corr = cross_corr / (np.sqrt(np.sum(reference_image ** 2)) * np.sqrt(np.sum(moving_image ** 2)))
+    normalized_corr = cross_corr / (np.sqrt(np.sum(reference_image**2)) * np.sqrt(np.sum(moving_image**2)))
 
     return normalized_corr
 
 
 def differential_cross_correlation(
-        moving_image: Union[np.ndarray, torch.Tensor],
-        fitting_image: Union[np.ndarray, torch.Tensor],
-        threshold: float = None
+    moving_image: Union[np.ndarray, torch.Tensor],
+    fitting_image: Union[np.ndarray, torch.Tensor],
+    threshold: float = None,
 ) -> float:
     r"""
     Calculate the Differential Cross Correlation (DCC) similarity between two images as
@@ -93,19 +90,19 @@ def differential_cross_correlation(
     moving_image, fitting_image = cross_correlation_pre_process(moving_image, fitting_image, threshold)
 
     cross_corr = np.sum(np.abs(moving_image - fitting_image) * np.abs(fitting_image))
-    differential_corr = cross_corr / np.sqrt(np.sum(fitting_image ** 2))
+    differential_corr = cross_corr / np.sqrt(np.sum(fitting_image**2))
 
     return differential_corr
 
 
 def get_argmax(
-        x: Union[List[Union[int, float]], np.ndarray, torch.Tensor],
-        y: Union[List[Union[int, float]], np.ndarray, torch.Tensor],
-        x_fit: Union[List[Union[int, float]], np.ndarray, torch.Tensor],
-        x_left: int,
-        x_right: int,
-        ratio: int,
-        deg: int = 4
+    x: Union[List[Union[int, float]], np.ndarray, torch.Tensor],
+    y: Union[List[Union[int, float]], np.ndarray, torch.Tensor],
+    x_fit: Union[List[Union[int, float]], np.ndarray, torch.Tensor],
+    x_left: int,
+    x_right: int,
+    ratio: int,
+    deg: int = 4,
 ) -> Tuple[int, np.ndarray]:
     """
     Fits a polynomial of degree `deg` to the data points (`x`, `y`), evaluates the polynomial at `x_fit`,
@@ -125,25 +122,22 @@ def get_argmax(
     y_fit = np.poly1d(p)(x_fit)
     x_roots = np.roots([p[i] * (len(p) - 1 - i) for i in range(0, len(p) - 1)]).real
     x_argmax = x_roots[
-        np.squeeze(np.argmax([
-            y_fit[int((r - x_left) * ratio)]
-            if x_left <= r <= x_right
-            else -np.inf
-            for r in x_roots
-        ]))
+        np.squeeze(
+            np.argmax([y_fit[int((r - x_left) * ratio)] if x_left <= r <= x_right else -np.inf for r in x_roots])
+        )
     ]
     return x_argmax, y_fit
 
 
 def axial_position_registration(
-        reference_images: Union[np.ndarray, torch.Tensor],
-        moving_image: Union[np.ndarray, torch.Tensor],
-        lateral_shift: Union[List[float], Tuple[float, float]],
-        start: float,
-        reference_range: Union[List[float], np.ndarray, torch.Tensor],
-        search_length: float = 0.1,
-        search_step: float = STD_IMAGES_STEP,
-        threshold: float = None
+    reference_images: Union[np.ndarray, torch.Tensor],
+    moving_image: Union[np.ndarray, torch.Tensor],
+    lateral_shift: Union[List[float], Tuple[float, float]],
+    start: float,
+    reference_range: Union[List[float], np.ndarray, torch.Tensor],
+    search_length: float = 0.1,
+    search_step: float = STD_IMAGES_STEP,
+    threshold: float = None,
 ) -> Tuple[float, float, List[float]]:
     """
     Registers the axial position of a moving image relative to a set of reference images by finding the position
@@ -169,11 +163,7 @@ def axial_position_registration(
     start = np.round(start, 2)
     start_idx = np.squeeze(np.argwhere(np.round(reference_range, 2) == start))
     search_range_idx: int = int(search_length / STD_IMAGES_STEP)
-    left_idx = (
-        start_idx - search_range_idx
-        if start_idx > search_range_idx
-        else 0
-    )
+    left_idx = start_idx - search_range_idx if start_idx > search_range_idx else 0
     right_idx = (
         start_idx + search_range_idx
         if search_range_idx < len(reference_range) - 1 - start_idx
@@ -193,12 +183,7 @@ def axial_position_registration(
 
     try:
         normalized_corr_argmax, normalized_corr_fitting = get_argmax(
-            reference_z_idx,
-            normalized_corr_list,
-            fitting_z_idx,
-            left_idx,
-            right_idx,
-            search_ratio
+            reference_z_idx, normalized_corr_list, fitting_z_idx, left_idx, right_idx, search_ratio
         )
     except ValueError:
         logger.error("attempt to get argmax of an empty cross-correlation sequence")

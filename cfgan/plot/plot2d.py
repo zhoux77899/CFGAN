@@ -3,15 +3,13 @@ from typing import Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 
-from .colors import BLACK, SILVER, WHITE, BLUE, YELLOW
-from .utils import axis_style_process_2d, set_figsize
 from ..math.precision import Error
+from .colors import BLACK, BLUE, SILVER, WHITE, YELLOW
+from .utils import axis_style_process_2d, set_figsize
 
 
 def plot_localization_errors(
-        errors: Tuple[Error, Error, Error],
-        ylimit: float = 0.1,
-        figsize: Tuple[int, int] = (4, 2)
+    errors: Tuple[Error, Error, Error], ylimit: float = 0.1, figsize: Tuple[int, int] = (4, 2)
 ) -> None:
     radial_errors, lateral_errors, axial_errors = errors
     idx = np.arange(radial_errors.errors.size)
@@ -32,7 +30,7 @@ def plot_localization_errors(
         framealpha=1,
         handlelength=2.5,
         handletextpad=0.5,
-        columnspacing=0.5
+        columnspacing=0.5,
     )
     ax.set_xticks(idx, idx)
     ax.set_ylabel("Localization Error (µm)", color=BLACK)

@@ -1,24 +1,24 @@
-from typing import Union, List
+from typing import List, Union
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
 from matplotlib_scalebar.scalebar import ScaleBar
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def imshow(
-        *imgs: np.ndarray,
-        figheight: float = 3,
-        px_size: float = 8e-8,
-        cmap: str = "viridis",
-        titles: Union[List[str], str] = None,
-        normalization: bool = False,
-        scalebar: bool = False,
-        colorbar: Union[bool, List[bool]] = False,
-        rms: bool = False,
-        **kwargs
-    ) -> None:
+    *imgs: np.ndarray,
+    figheight: float = 3,
+    px_size: float = 8e-8,
+    cmap: str = "viridis",
+    titles: Union[List[str], str] = None,
+    normalization: bool = False,
+    scalebar: bool = False,
+    colorbar: Union[bool, List[bool]] = False,
+    rms: bool = False,
+    **kwargs,
+) -> None:
     """
     Display one or more images with customizable options.
     This function visualizes a series of images using Matplotlib,
@@ -60,14 +60,16 @@ def imshow(
                 scale_loc="top",
                 frameon=False,
                 color="white",
-                label_formatter=lambda value, unit: "{} {}".format(value, unit.replace("$\\mathrm{\\mu}$", "µ"))
+                label_formatter=lambda value, unit: "{} {}".format(value, unit.replace("$\\mathrm{\\mu}$", "µ")),
             )
             ax.add_artist(scale_bar)
 
-        if any([
-            isinstance(colorbar, bool) and colorbar and idx == len(imgs) - 1,
-            isinstance(colorbar, list) and colorbar[idx]
-        ]):
+        if any(
+            [
+                isinstance(colorbar, bool) and colorbar and idx == len(imgs) - 1,
+                isinstance(colorbar, list) and colorbar[idx],
+            ]
+        ):
             divider = make_axes_locatable(ax)
             ax_cb = divider.new_horizontal(size="5%", pad=0.05)
             fig = ax.get_figure()

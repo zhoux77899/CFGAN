@@ -10,11 +10,7 @@ class ResidualMoleculeDataset(Dataset):
     """
 
     def __init__(
-            self,
-            img_lists: list[dict],
-            normalization: bool = False,
-            train: bool = True,
-            pct: float = 0.8
+        self, img_lists: list[dict], normalization: bool = False, train: bool = True, pct: float = 0.8
     ) -> None:
         super(ResidualMoleculeDataset, self).__init__()
         self.img_lists = img_lists
@@ -48,17 +44,16 @@ class ResidualMoleculeDataset(Dataset):
         assert len(emitter_set) == len(image_set)
 
         if self.train:
-            emitters = emitter_set[:int(self.pct * len(emitter_set))]
-            images = image_set[:int(self.pct * len(image_set))]
+            emitters = emitter_set[: int(self.pct * len(emitter_set))]
+            images = image_set[: int(self.pct * len(image_set))]
         else:
-            emitters = emitter_set[int(self.pct * len(emitter_set)):]
-            images = image_set[int(self.pct * len(image_set)):]
+            emitters = emitter_set[int(self.pct * len(emitter_set)) :]
+            images = image_set[int(self.pct * len(image_set)) :]
 
         return emitters, images
 
     def __len__(self) -> int:
-        """Total number of samples of data.
-        """
+        """Total number of samples of data."""
         assert len(self.emitters) == len(self.images)
         return len(self.emitters)
 

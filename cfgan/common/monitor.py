@@ -17,4 +17,4 @@ def monitor_gpu_memory(device_id: int) -> float:
     pynvml.nvmlInit()
     handler = pynvml.nvmlDeviceGetHandleByIndex(device_id)
     memory_info = pynvml.nvmlDeviceGetMemoryInfo(handler)
-    return memory_info.free / 1024 ** 2
+    return memory_info.free / 1024**2

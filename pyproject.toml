@@ -51,7 +51,7 @@ dependencies = [
 include = ["cfgan*"]
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py310']
 include = '\.pyi?$'
 extend-exclude = '''
@@ -71,14 +71,8 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 multi_line_output = 3
-line_length = 88
+line_length = 120
 
 [tool.pytest.ini_options]
 pythonpath = [".", "cfgan"]
 testpaths = ["tests"]
-
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-strict = false

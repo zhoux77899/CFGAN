@@ -1,6 +1,7 @@
 """
 This module contains unit tests for the `get_value` function in the `cfgan.config` module.
 """
+
 import os
 import unittest
 
@@ -10,8 +11,7 @@ PROJ_ROOT_DIR = os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(_
 
 
 class TestGetValue(unittest.TestCase):
-    """Test `get_value` function.
-    """
+    """Test `get_value` function."""
 
     def setUp(self) -> None:
         pass

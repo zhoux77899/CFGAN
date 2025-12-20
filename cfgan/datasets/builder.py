@@ -1,10 +1,10 @@
-from functools import partial
 import random
+from functools import partial
 from typing import Optional
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from ..datasets.molecule import MoleculeDataset
 from ..datasets.residual import ResidualMoleculeDataset
@@ -18,11 +18,11 @@ def build_molecule_dataset(
     filter_args: Optional[dict] = None,
     normalization: bool = True,
     train: bool = True,
-    pct: float = 0.8
+    pct: float = 0.8,
 ) -> MoleculeDataset:
     """Build a PyTorch Dataset for molecular imaging data.
 
-    Creates and returns a MoleculeDataset instance for loading and processing 
+    Creates and returns a MoleculeDataset instance for loading and processing
     molecular images and their corresponding Point Spread Function (PSF) data.
 
     :param dataset_type: Dataset type identifier (maintained for interface consistency)
@@ -43,21 +43,17 @@ def build_molecule_dataset(
         filter_args=filter_args,
         normalization=normalization,
         train=train,
-        pct=pct
+        pct=pct,
     )
 
 
 def build_residual_dataset(
-        dataset_type: str,
-        img_lists: list[dict],
-        normalization: bool = True,
-        train: bool = True,
-        pct: float = 0.8
+    dataset_type: str, img_lists: list[dict], normalization: bool = True, train: bool = True, pct: float = 0.8
 ) -> ResidualMoleculeDataset:
     """Build a PyTorch Dataset for residual molecule imaging data.
 
     Creates and returns a ResidualMoleculeDataset instance for loading and processing
-    residual molecule images with their corresponding emitter count information. 
+    residual molecule images with their corresponding emitter count information.
 
     :param dataset_type: Dataset type identifier (maintained for interface consistency)
     :param img_lists: List of dictionaries where keys are the number of residual emitters
@@ -84,7 +80,7 @@ def build_dataloader(
     shuffle: bool = True,
     seed: int = None,
     pin_memory: bool = False,
-    **kwargs
+    **kwargs,
 ) -> DataLoader:
     """Build PyTorch DataLoader.
 
@@ -105,11 +101,7 @@ def build_dataloader(
     batch_size = num_gpus * batches_per_gpu
     num_workers = num_gpus * workers_per_gpu
 
-    init_fn = partial(
-        worker_init_fn,
-        num_workers=num_workers,
-        seed=seed
-    ) if seed else None
+    init_fn = partial(worker_init_fn, num_workers=num_workers, seed=seed) if seed else None
 
     return DataLoader(
         dataset,
@@ -118,7 +110,7 @@ def build_dataloader(
         shuffle=shuffle,
         worker_init_fn=init_fn,
         pin_memory=pin_memory,
-        **kwargs
+        **kwargs,
     )
 
 

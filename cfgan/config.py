@@ -3,6 +3,7 @@ This module provides configuration file parsing and configuration class-related 
 It supports reading configuration information from INI and YAML files,
 and converting them into corresponding configuration objects.
 """
+
 import ast
 import configparser
 import os
@@ -32,11 +33,7 @@ def get_value(value: Any, type_hint: str) -> Any:
     return value
 
 
-def dict_from_ini_file(
-        ini_file: Union[str, os.PathLike],
-        section_name: str,
-        kv_map: dict[str, str]
-) -> dict[str, Any]:
+def dict_from_ini_file(ini_file: Union[str, os.PathLike], section_name: str, kv_map: dict[str, str]) -> dict[str, Any]:
     config = configparser.ConfigParser()
     config.read(ini_file)
     section = config[section_name]
@@ -50,9 +47,9 @@ def dict_from_ini_file(
 
 
 def dict_from_yaml_file(
-        yaml_file: Union[str, os.PathLike],
-        section_name: str,
-        kv_map: dict[str, str],
+    yaml_file: Union[str, os.PathLike],
+    section_name: str,
+    kv_map: dict[str, str],
 ) -> dict[str, Any]:
     with open(yaml_file, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
@@ -67,8 +64,7 @@ def dict_from_yaml_file(
 
 
 class BaseConfig(ABC):
-    """Base class for different configurations.
-    """
+    """Base class for different configurations."""
 
     config_type: str = ""
     kv_map: dict[str, str] = {}
@@ -89,8 +85,7 @@ class BaseConfig(ABC):
 
 
 class CFGANDatasetConfig(BaseConfig):
-    """Configuration of CFGAN dataset
-    """
+    """Configuration of CFGAN dataset"""
 
     config_type = "cfgan_dataset"
     kv_map = {
@@ -108,26 +103,17 @@ class CFGANDatasetConfig(BaseConfig):
 
     @classmethod
     def from_ini_file(cls, ini_file: Union[str, os.PathLike]) -> "CFGANDatasetConfig":
-        config_dict = dict_from_ini_file(
-            ini_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_ini_file(ini_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
     @classmethod
     def from_yaml_file(cls, yaml_file: Union[str, os.PathLike]) -> "CFGANDatasetConfig":
-        config_dict = dict_from_yaml_file(
-            yaml_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_yaml_file(yaml_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
 
 class TerminatorDatasetConfig(BaseConfig):
-    """Configuration of Terminator dataset
-    """
+    """Configuration of Terminator dataset"""
 
     config_type = "terminator_dataset"
     kv_map = {
@@ -140,26 +126,17 @@ class TerminatorDatasetConfig(BaseConfig):
     @classmethod
     def from_ini_file(cls, ini_file: Union[str, os.PathLike]) -> "TerminatorDatasetConfig":
 
-        config_dict = dict_from_ini_file(
-            ini_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_ini_file(ini_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
     @classmethod
     def from_yaml_file(cls, yaml_file: Union[str, os.PathLike]) -> "TerminatorDatasetConfig":
-        config_dict = dict_from_yaml_file(
-            yaml_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_yaml_file(yaml_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
 
 class FilterConfig(BaseConfig):
-    """Configuration of filter
-    """
+    """Configuration of filter"""
 
     config_type = "filter"
     kv_map = {
@@ -171,26 +148,17 @@ class FilterConfig(BaseConfig):
 
     @classmethod
     def from_ini_file(cls, ini_file: Union[str, os.PathLike]) -> "FilterConfig":
-        config_dict = dict_from_ini_file(
-            ini_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_ini_file(ini_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
     @classmethod
     def from_yaml_file(cls, yaml_file: Union[str, os.PathLike]) -> "FilterConfig":
-        config_dict = dict_from_yaml_file(
-            yaml_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_yaml_file(yaml_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
 
 class ModelConfig(BaseConfig):
-    """Configuration of model
-    """
+    """Configuration of model"""
 
     config_type = "model"
     kv_map = {
@@ -202,26 +170,17 @@ class ModelConfig(BaseConfig):
 
     @classmethod
     def from_ini_file(cls, ini_file: Union[str, os.PathLike]) -> "ModelConfig":
-        config_dict = dict_from_ini_file(
-            ini_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_ini_file(ini_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
     @classmethod
     def from_yaml_file(cls, yaml_file: Union[str, os.PathLike]) -> "ModelConfig":
-        config_dict = dict_from_yaml_file(
-            yaml_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_yaml_file(yaml_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
 
 class EnvConfig(BaseConfig):
-    """Configuration of ENV
-    """
+    """Configuration of ENV"""
 
     config_type = "env"
     kv_map = {
@@ -233,7 +192,7 @@ class EnvConfig(BaseConfig):
         "clip_size": "int",
         "clip_bias": "int",
         "tiny": "float",
-        "threshold": "float"
+        "threshold": "float",
     }
 
     def __init__(self, **kwargs: Any) -> None:
@@ -249,26 +208,17 @@ class EnvConfig(BaseConfig):
 
     @classmethod
     def from_ini_file(cls, ini_file: Union[str, os.PathLike]) -> "EnvConfig":
-        config_dict = dict_from_ini_file(
-            ini_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_ini_file(ini_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
     @classmethod
     def from_yaml_file(cls, yaml_file: Union[str, os.PathLike]) -> "EnvConfig":
-        config_dict = dict_from_yaml_file(
-            yaml_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_yaml_file(yaml_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
 
 class TrainerConfig(BaseConfig):
-    """Configuration of trainer
-    """
+    """Configuration of trainer"""
 
     config_type = "trainer"
     kv_map = {
@@ -281,7 +231,7 @@ class TrainerConfig(BaseConfig):
         "adam_beta2": "float",
         "adam_eps": "float",
         "save_dir": "Union[str, os.PathLike]",
-        "temp_dir": "Union[str, os.PathLike]"
+        "temp_dir": "Union[str, os.PathLike]",
     }
 
     def __init__(self, **kwargs: Any) -> None:
@@ -298,18 +248,10 @@ class TrainerConfig(BaseConfig):
 
     @classmethod
     def from_ini_file(cls, ini_file: Union[str, os.PathLike]) -> "TrainerConfig":
-        config_dict = dict_from_ini_file(
-            ini_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_ini_file(ini_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
 
     @classmethod
     def from_yaml_file(cls, yaml_file: Union[str, os.PathLike]) -> "TrainerConfig":
-        config_dict = dict_from_yaml_file(
-            yaml_file,
-            cls.config_type,
-            cls.kv_map
-        )
+        config_dict = dict_from_yaml_file(yaml_file, cls.config_type, cls.kv_map)
         return cls(**config_dict)
