@@ -2,35 +2,28 @@ import os
 from typing import List, Optional, Tuple
 
 import numpy as np
+import tifffile as tiff
 import torch
 from torch.utils.data import Dataset
-import tifffile as tiff
 
 from ..common.utils import get_image_size
 from ..denoise.filter import CrossFilter
 
-
-FILTER_ARGS = {
-    'fraction': (0.15, 0.60),
-    'rotation': -22.5,
-    'types': 'ri',
-    'gaussian_radius': 1.25
-}
+FILTER_ARGS = {"fraction": (0.15, 0.60), "rotation": -22.5, "types": "ri", "gaussian_radius": 1.25}
 
 
 class MoleculeDataset(Dataset):
-    """Molecule image dataset.
-    """
+    """Molecule image dataset."""
 
     def __init__(
         self,
         img_dir: str,
         psf_dir: str,
-        suffix: str = '.tif',
+        suffix: str = ".tif",
         filter_args: Optional[dict] = None,
         normalization: bool = True,
         train: bool = True,
-        pct: float = 0.8
+        pct: float = 0.8,
     ) -> None:
         super(MoleculeDataset, self).__init__()
         self.img_dir = img_dir
@@ -40,10 +33,10 @@ class MoleculeDataset(Dataset):
             FILTER_ARGS
             if not filter_args
             else {
-                'fraction': filter_args.pop('fraction', FILTER_ARGS['fraction']),
-                'rotation': filter_args.pop('rotation', FILTER_ARGS['rotation']),
-                'types': filter_args.pop('types', FILTER_ARGS['types']),
-                'gaussian_radius': filter_args.pop('gaussian_radius', FILTER_ARGS['gaussian_radius']),
+                "fraction": filter_args.pop("fraction", FILTER_ARGS["fraction"]),
+                "rotation": filter_args.pop("rotation", FILTER_ARGS["rotation"]),
+                "types": filter_args.pop("types", FILTER_ARGS["types"]),
+                "gaussian_radius": filter_args.pop("gaussian_radius", FILTER_ARGS["gaussian_radius"]),
             }
         )
         self.normalization = normalization
@@ -78,8 +71,8 @@ class MoleculeDataset(Dataset):
             image = image[
                 :,
                 np.newaxis,
-                (cur_size - tar_size) // 2:(cur_size + tar_size) // 2,
-                (cur_size - tar_size) // 2:(cur_size + tar_size) // 2
+                (cur_size - tar_size) // 2 : (cur_size + tar_size) // 2,
+                (cur_size - tar_size) // 2 : (cur_size + tar_size) // 2,
             ]
             image_array.append(image)
         image_stack = np.vstack(image_array)
@@ -106,11 +99,11 @@ class MoleculeDataset(Dataset):
         psf_image_set = self.set_images(psf_list, filter=False)
 
         if self.train:
-            imgs = img_image_set[:int(self.pct * len(img_image_set))]
-            psfs = psf_image_set[:int(self.pct * len(psf_image_set))]
+            imgs = img_image_set[: int(self.pct * len(img_image_set))]
+            psfs = psf_image_set[: int(self.pct * len(psf_image_set))]
         else:
-            imgs = img_image_set[int(self.pct * len(img_image_set)):]
-            psfs = psf_image_set[int(self.pct * len(psf_image_set)):]
+            imgs = img_image_set[int(self.pct * len(img_image_set)) :]
+            psfs = psf_image_set[int(self.pct * len(psf_image_set)) :]
 
         return imgs, psfs
 
@@ -119,7 +112,7 @@ class MoleculeDataset(Dataset):
 
     def __len__(self) -> int:
         """Total number of samples of data.
-        
+
         Returns:
             int: Number of samples.
         """

@@ -9,13 +9,12 @@ from torch.utils.tensorboard import SummaryWriter
 from cfgan.common.logging import logger
 from cfgan.common.monitor import monitor_disk_usage, monitor_gpu_memory
 from cfgan.config import TerminatorDatasetConfig, TrainerConfig
-from cfgan.datasets.builder import build_residual_dataset, build_dataloader
+from cfgan.datasets.builder import build_dataloader, build_residual_dataset
 from cfgan.models.losses import TerminatorLoss
 from cfgan.models.modeling_terminator import Terminator
 
-
 # set random seed for reproducibility
-os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8'
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"
 MANUAL_SEED = 42
 torch.manual_seed(MANUAL_SEED)
 torch.use_deterministic_algorithms(True, warn_only=True)  # needed for reproducible results
@@ -38,18 +37,18 @@ def init_weights(m: torch.nn.Module) -> None:
 
 class TerminatorTrainer:
     def __init__(
-            self: "TerminatorTrainer",
-            img_lists: list,
-            num_epochs: int,
-            num_batches: int,
-            num_workers: int,
-            num_gpus: int = 1,
-            learning_rate: float = 0.0002,
-            adam_beta1: float = 0.9,
-            adam_beta2: float = 0.999,
-            adam_eps: float = 1e-08,
-            save_dir: str | os.PathLike = None,
-            temp_dir: str | os.PathLike = None,
+        self: "TerminatorTrainer",
+        img_lists: list,
+        num_epochs: int,
+        num_batches: int,
+        num_workers: int,
+        num_gpus: int = 1,
+        learning_rate: float = 0.0002,
+        adam_beta1: float = 0.9,
+        adam_beta2: float = 0.999,
+        adam_eps: float = 1e-08,
+        save_dir: str | os.PathLike = None,
+        temp_dir: str | os.PathLike = None,
     ) -> None:
         self.img_lists = img_lists
         self.num_epochs = num_epochs
@@ -97,12 +96,7 @@ class TerminatorTrainer:
         )
 
         # initialize the learning rate schedulers
-        self.scheduler = torch.optim.lr_scheduler.LinearLR(
-            self.optimizer,
-            1.0,
-            0.1,
-            num_epochs - 1
-        )
+        self.scheduler = torch.optim.lr_scheduler.LinearLR(self.optimizer, 1.0, 0.1, num_epochs - 1)
 
     @staticmethod
     def _set_progressbar() -> Callable:
@@ -118,8 +112,7 @@ class TerminatorTrainer:
         return progressbar
 
     def train(self) -> list:
-        """Train Terminator.
-        """
+        """Train Terminator."""
 
         # tensorboard summary writer
         summary_writer = SummaryWriter(os.path.join("runs", "terminator"))
@@ -167,30 +160,12 @@ class TerminatorTrainer:
                         f"disk usage: {disk_usage}, "
                         f"GPU free memory: {gpu_free_memory:.4f}"
                     )
+                    summary_writer.add_scalars("training/loss", {"loss": err.item()}, iters)
+                    summary_writer.add_scalars("training/output", {"t_nums": t_nums}, iters)
+                    summary_writer.add_scalars("training/disk_usage", disk_usage, iters)
+                    summary_writer.add_scalars("training/gpu_free_memory", {"gpu_free_memory": gpu_free_memory}, iters)
                     summary_writer.add_scalars(
-                        "training/loss",
-                        {"loss": err.item()},
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        "training/output",
-                        {"t_nums": t_nums},
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        "training/disk_usage",
-                        disk_usage,
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        "training/gpu_free_memory",
-                        {"gpu_free_memory": gpu_free_memory},
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        "training/learning_rate",
-                        {"lr": self.optimizer.state_dict()["param_groups"][0]["lr"]},
-                        iters
+                        "training/learning_rate", {"lr": self.optimizer.state_dict()["param_groups"][0]["lr"]}, iters
                     )
 
                 # save losses for plotting
@@ -236,7 +211,7 @@ if __name__ == "__main__":
         trainer_config.adam_beta2,
         trainer_config.adam_eps,
         trainer_config.save_dir,
-        trainer_config.temp_dir
+        trainer_config.temp_dir,
     )
 
     losses = trainer.train()

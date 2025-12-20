@@ -1,7 +1,6 @@
 import logging
 
-
-FORMAT = '%(asctime)s [%(levelname)s] - %(filename)s (%(lineno)s): %(message)s'
+FORMAT = "%(asctime)s [%(levelname)s] - %(filename)s (%(lineno)s): %(message)s"
 
 
 logging.basicConfig(format=FORMAT)

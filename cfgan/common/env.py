@@ -4,7 +4,6 @@ from typing import Tuple
 
 from cfgan.config import EnvConfig
 
-
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "..", "config.ini")
 env_config = EnvConfig.from_ini_file(CONFIG_FILE)
 

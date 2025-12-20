@@ -7,13 +7,13 @@ from .colors import BLACK, SILVER
 
 
 def axis_style_process_2d(
-        ax: plt.Axes,
-        xlimn: int,
-        ylimn: int,
-        xticks: Optional[Union[List[int], List[float]]],
-        yticks: Optional[Union[List[int], List[float]]],
-        grid: bool = False,
-        fullframe: bool = False
+    ax: plt.Axes,
+    xlimn: int,
+    ylimn: int,
+    xticks: Optional[Union[List[int], List[float]]],
+    yticks: Optional[Union[List[int], List[float]]],
+    grid: bool = False,
+    fullframe: bool = False,
 ) -> None:
     ax.xaxis.set_major_locator(ticker.MaxNLocator(xlimn))
     ax.yaxis.set_major_locator(ticker.MaxNLocator(ylimn))

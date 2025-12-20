@@ -1,20 +1,19 @@
 import os
-from typing import List, Tuple, Union, Callable
+from typing import Callable, List, Tuple, Union
 
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from cfgan.config import CFGANDatasetConfig, TrainerConfig
 from cfgan.common.logging import logger
 from cfgan.common.monitor import monitor_disk_usage, monitor_gpu_memory
-from cfgan.datasets.builder import build_molecule_dataset, build_dataloader
-from cfgan.models.losses import GeneratorLoss, DiscriminatorLoss
-from cfgan.models.modeling_cfgan import UNetGenerator, CNNDiscriminator
-
+from cfgan.config import CFGANDatasetConfig, TrainerConfig
+from cfgan.datasets.builder import build_dataloader, build_molecule_dataset
+from cfgan.models.losses import DiscriminatorLoss, GeneratorLoss
+from cfgan.models.modeling_cfgan import CNNDiscriminator, UNetGenerator
 
 # set random seed for reproducibility
-os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8'
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"
 manual_seed = 42
 torch.manual_seed(manual_seed)
 torch.use_deterministic_algorithms(True, warn_only=True)  # needed for reproducible results
@@ -29,40 +28,35 @@ def init_weights(m: torch.nn.Module) -> None:
 
     classname = m.__class__.__name__
 
-    if classname.find('Conv') != -1:
+    if classname.find("Conv") != -1:
         torch.nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
+    elif classname.find("BatchNorm") != -1:
         torch.nn.init.normal_(m.weight.data, 1.0, 0.02)
         torch.nn.init.constant_(m.bias.data, 0)
 
 
 class CFGANTrainer:
     def __init__(
-            self,
-            img_dir: str | os.PathLike,
-            psf_dir: str | os.PathLike,
-            num_epochs: int,
-            num_batches: int,
-            num_workers: int,
-            learning_rate: float = 0.0002,
-            adam_beta1: float = 0.9,
-            adam_beta2: float = 0.999,
-            adam_eps: float = 1e-08,
-            save_dir: str | os.PathLike = None,
-            temp_dir: str | os.PathLike = None,
+        self,
+        img_dir: str | os.PathLike,
+        psf_dir: str | os.PathLike,
+        num_epochs: int,
+        num_batches: int,
+        num_workers: int,
+        learning_rate: float = 0.0002,
+        adam_beta1: float = 0.9,
+        adam_beta2: float = 0.999,
+        adam_eps: float = 1e-08,
+        save_dir: str | os.PathLike = None,
+        temp_dir: str | os.PathLike = None,
     ) -> None:
         self.num_epochs = num_epochs
         self.save_dir = save_dir
         self.temp_dir = temp_dir
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # create the dataset
-        self.dataset = build_molecule_dataset(
-            dataset_type='denoise',
-            img_dir=img_dir,
-            psf_dir=psf_dir,
-            train=True
-        )
+        self.dataset = build_molecule_dataset(dataset_type="denoise", img_dir=img_dir, psf_dir=psf_dir, train=True)
         self.dataloader = build_dataloader(
             dataset=self.dataset,
             batches_per_gpu=num_batches,
@@ -70,7 +64,7 @@ class CFGANTrainer:
             num_gpus=1,
             shuffle=True,
             seed=manual_seed,
-            pin_memory=False
+            pin_memory=False,
         )
 
         # create the Generator and apply the `init_weight` function to randomly initialize all weights
@@ -81,36 +75,20 @@ class CFGANTrainer:
         self.net_d.apply(init_weights)
 
         # initialize the loss function
-        self.criterion_g = GeneratorLoss(l1_weight=5, device='{}:{}'.format(self.device.type, self.device.index))
-        self.criterion_d = DiscriminatorLoss(device='{}:{}'.format(self.device.type, self.device.index))
+        self.criterion_g = GeneratorLoss(l1_weight=5, device="{}:{}".format(self.device.type, self.device.index))
+        self.criterion_d = DiscriminatorLoss(device="{}:{}".format(self.device.type, self.device.index))
 
         # initialize the optimizers
         self.optimizer_g = torch.optim.Adam(
-            self.net_g.parameters(),
-            lr=learning_rate,
-            betas=(adam_beta1, adam_beta2),
-            eps=adam_eps
+            self.net_g.parameters(), lr=learning_rate, betas=(adam_beta1, adam_beta2), eps=adam_eps
         )
         self.optimizer_d = torch.optim.Adam(
-            self.net_d.parameters(),
-            lr=learning_rate,
-            betas=(adam_beta1, adam_beta2),
-            eps=adam_eps
+            self.net_d.parameters(), lr=learning_rate, betas=(adam_beta1, adam_beta2), eps=adam_eps
         )
 
         # initialize the learning rate schedulers
-        self.scheduler_g = torch.optim.lr_scheduler.LinearLR(
-            self.optimizer_g,
-            1.0,
-            0.1,
-            num_epochs - 1
-        )
-        self.scheduler_d = torch.optim.lr_scheduler.LinearLR(
-            self.optimizer_d,
-            1.0,
-            0.1,
-            num_epochs - 1
-        )
+        self.scheduler_g = torch.optim.lr_scheduler.LinearLR(self.optimizer_g, 1.0, 0.1, num_epochs - 1)
+        self.scheduler_d = torch.optim.lr_scheduler.LinearLR(self.optimizer_d, 1.0, 0.1, num_epochs - 1)
 
     @staticmethod
     def _set_progressbar() -> Callable:
@@ -126,12 +104,11 @@ class CFGANTrainer:
         return progressbar
 
     def train(self) -> Tuple[List, List]:
-        """Train GAN.
-        """
+        """Train GAN."""
 
         # tensorboard summary writer
-        summary_writer = SummaryWriter(os.path.join('runs', 'cfgan'))
-        logger.info('Running `tensorboard --logdir=runs` from command line.')
+        summary_writer = SummaryWriter(os.path.join("runs", "cfgan"))
+        logger.info("Running `tensorboard --logdir=runs` from command line.")
 
         summary_writer.add_graph(self.net_g, torch.randn(1, 1, 256, 256).to(self.device))
         summary_writer.add_graph(self.net_d, torch.randn(1, 1, 256, 256).to(self.device))
@@ -143,12 +120,12 @@ class CFGANTrainer:
         iters = 0
 
         # start training loop
-        logger.info('Starting training loop on %s.', self.device)
+        logger.info("Starting training loop on %s.", self.device)
 
         progressbar = self._set_progressbar()
 
         # for each epoch
-        for epoch in progressbar(range(self.num_epochs), 'Training...'):
+        for epoch in progressbar(range(self.num_epochs), "Training..."):
             # for each batch in the dataloader
             for i, data in enumerate(self.dataloader):  # type: int, Tuple[torch.Tensor, torch.Tensor]
                 # ``noise`` is the cross-filter image, ``clear`` is the corresponding psf
@@ -184,52 +161,37 @@ class CFGANTrainer:
                     gpu_free_memory = monitor_gpu_memory(self.device.index)
 
                     print(
-                        '[{:3d}/{:3d}][{:3d}/{:3d}]\t'
-                        'Loss_D: {:.4f}, Loss_G: {:.4f}  '
-                        'D(y): {:.4f}, D(G(x)): {:.4f} / {:.4f}    '
-                        'Disk usage: {}    '
-                        'GPU free memory: {:.4f} MB'.format(
-                            epoch + 1, self.num_epochs, i + 1, len(self.dataloader),
-                            err_d.item(), err_g.item(),
-                            d_y, d_g_x1, d_g_x2,
+                        "[{:3d}/{:3d}][{:3d}/{:3d}]\t"
+                        "Loss_D: {:.4f}, Loss_G: {:.4f}  "
+                        "D(y): {:.4f}, D(G(x)): {:.4f} / {:.4f}    "
+                        "Disk usage: {}    "
+                        "GPU free memory: {:.4f} MB".format(
+                            epoch + 1,
+                            self.num_epochs,
+                            i + 1,
+                            len(self.dataloader),
+                            err_d.item(),
+                            err_g.item(),
+                            d_y,
+                            d_g_x1,
+                            d_g_x2,
                             disk_usage,
-                            gpu_free_memory
+                            gpu_free_memory,
                         )
                     )
+                    summary_writer.add_scalars("training/loss", {"Loss_D": err_d.item(), "Loss_G": err_g.item()}, iters)
                     summary_writer.add_scalars(
-                        'training/loss',
+                        "training/dis", {"D(y)": d_y, "D(G(x))_1": d_g_x1, "D(G(x))_2": d_g_x2}, iters
+                    )
+                    summary_writer.add_scalars("training/disk_usage", disk_usage, iters)
+                    summary_writer.add_scalars("training/gpu_free_memory", {"gpu_free_memory": gpu_free_memory}, iters)
+                    summary_writer.add_scalars(
+                        "training/learning_rate",
                         {
-                            'Loss_D': err_d.item(),
-                            'Loss_G': err_g.item()
+                            "lr_g": self.optimizer_g.state_dict()["param_groups"][0]["lr"],
+                            "lr_d": self.optimizer_d.state_dict()["param_groups"][0]["lr"],
                         },
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        'training/dis',
-                        {
-                            'D(y)': d_y,
-                            'D(G(x))_1': d_g_x1,
-                            'D(G(x))_2': d_g_x2
-                        },
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        'training/disk_usage',
-                        disk_usage,
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        'training/gpu_free_memory',
-                        {'gpu_free_memory': gpu_free_memory},
-                        iters
-                    )
-                    summary_writer.add_scalars(
-                        'training/learning_rate',
-                        {
-                            'lr_g': self.optimizer_g.state_dict()['param_groups'][0]['lr'],
-                            'lr_d': self.optimizer_d.state_dict()['param_groups'][0]['lr']
-                        },
-                        iters
+                        iters,
                     )
 
                 # save losses for plotting
@@ -244,24 +206,24 @@ class CFGANTrainer:
 
             # save temporary checkpoints
             if (epoch + 1) % 50 == 0 and self.temp_dir:
-                torch.save(self.net_g, os.path.join(f'{self.temp_dir}', f'gen_epoch{epoch + 1}.pt'))
-                torch.save(self.net_d, os.path.join(f'{self.temp_dir}', f'dis_epoch{epoch + 1}.pt'))
+                torch.save(self.net_g, os.path.join(f"{self.temp_dir}", f"gen_epoch{epoch + 1}.pt"))
+                torch.save(self.net_d, os.path.join(f"{self.temp_dir}", f"dis_epoch{epoch + 1}.pt"))
 
         # finish training loop
         summary_writer.close()
-        logger.info('Finished training loop.')
+        logger.info("Finished training loop.")
 
         # save checkpoints
         if self.save_dir:
-            torch.save(self.net_g, os.path.join(f'{self.save_dir}', 'gen.pt'))
-            torch.save(self.net_d, os.path.join(f'{self.save_dir}', 'dis.pt'))
-            logger.info('Trained checkpoint saved.')
+            torch.save(self.net_g, os.path.join(f"{self.save_dir}", "gen.pt"))
+            torch.save(self.net_d, os.path.join(f"{self.save_dir}", "dis.pt"))
+            logger.info("Trained checkpoint saved.")
 
         return g_losses, d_losses
 
 
-if __name__ == '__main__':
-    config_file = 'config.ini'
+if __name__ == "__main__":
+    config_file = "config.ini"
     dataset_config = CFGANDatasetConfig.from_ini_file(config_file)
     trainer_config = TrainerConfig.from_ini_file(config_file)
 
@@ -276,9 +238,9 @@ if __name__ == '__main__':
         trainer_config.adam_beta2,
         trainer_config.adam_eps,
         trainer_config.save_dir,
-        trainer_config.temp_dir
+        trainer_config.temp_dir,
     )
 
     g_losses, d_losses = trainer.train()
-    np.save(os.path.join('checkpoints', 'g_losses.npy'), g_losses)
-    np.save(os.path.join('checkpoints', 'd_losses.npy'), d_losses)
+    np.save(os.path.join("checkpoints", "g_losses.npy"), g_losses)
+    np.save(os.path.join("checkpoints", "d_losses.npy"), d_losses)

@@ -1,4 +1,4 @@
-from typing import Union, List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 import torch
@@ -7,10 +7,7 @@ from ..common import restrict_values
 
 
 @restrict_values("num_dimensions", [1, 2, 3, 4])
-def get_image_size(
-        image: Union[np.ndarray, torch.Tensor],
-        num_dimensions: int = 2
-) -> List[int]:
+def get_image_size(image: Union[np.ndarray, torch.Tensor], num_dimensions: int = 2) -> List[int]:
     """Get image size
 
     :param image: [``numpy.ndarray`` or ``torch.Tensor``]: Image.
@@ -35,8 +32,8 @@ def get_image_dimension(image: Union[np.ndarray, torch.Tensor]) -> int:
 
 
 def set_image_dimension(
-        image: Union[np.ndarray, torch.Tensor],
-        dimension: int = 4,
+    image: Union[np.ndarray, torch.Tensor],
+    dimension: int = 4,
 ) -> Union[np.ndarray, torch.Tensor]:
     """Set image to input dimension.
 
@@ -64,8 +61,8 @@ def set_image_dimension(
 
 
 def set_image_size(
-        image: Union[np.ndarray, torch.Tensor],
-        size: Union[List[int], Tuple[int, int]],
+    image: Union[np.ndarray, torch.Tensor],
+    size: Union[List[int], Tuple[int, int]],
 ) -> Union[np.ndarray, torch.Tensor]:
     """Set image to input size.
 
@@ -79,7 +76,7 @@ def set_image_size(
     image = set_image_dimension(image, 2)
 
     if cur_height > tar_height:
-        image = image[(cur_height - tar_height) // 2:(cur_height + tar_height) // 2, :]
+        image = image[(cur_height - tar_height) // 2 : (cur_height + tar_height) // 2, :]
     if cur_height < tar_height:
         if isinstance(image, np.ndarray):
             expanded_image = np.zeros((tar_height, cur_width), dtype=image.dtype)
@@ -87,13 +84,13 @@ def set_image_size(
             expanded_image = torch.zeros((tar_height, cur_width), dtype=image.dtype)
         else:
             raise TypeError("Input must be a `numpy.ndarray` or `torch.Tensor`")
-        expanded_image[(tar_height - cur_height) // 2:(tar_height + cur_height) // 2, :] = image
+        expanded_image[(tar_height - cur_height) // 2 : (tar_height + cur_height) // 2, :] = image
         image = expanded_image
 
     cur_height, cur_width = get_image_size(image, 2)
 
     if cur_width > tar_width:
-        image = image[:, (cur_width - tar_width) // 2:(cur_width + tar_width) // 2]
+        image = image[:, (cur_width - tar_width) // 2 : (cur_width + tar_width) // 2]
     if cur_width < tar_width:
         if isinstance(image, np.ndarray):
             expanded_image = np.zeros((cur_height, tar_width), dtype=image.dtype)
@@ -101,7 +98,7 @@ def set_image_size(
             expanded_image = torch.zeros((cur_height, tar_width), dtype=image.dtype)
         else:
             raise TypeError("Input must be a `numpy.ndarray` or `torch.Tensor`")
-        expanded_image[:, (tar_width - cur_width) // 2:(tar_width + cur_width) // 2] = image
+        expanded_image[:, (tar_width - cur_width) // 2 : (tar_width + cur_width) // 2] = image
         image = expanded_image
 
     image = set_image_dimension(image, dimension)
@@ -113,9 +110,7 @@ def normalize(image: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch
     return (image - image.min()) / (image.max() - image.min())
 
 
-def unify_positions_instance(
-        positions: Union[np.ndarray, torch.Tensor, List[List[float]]]
-) -> np.ndarray:
+def unify_positions_instance(positions: Union[np.ndarray, torch.Tensor, List[List[float]]]) -> np.ndarray:
     if isinstance(positions, np.ndarray):
         return positions
     elif isinstance(positions, torch.Tensor):

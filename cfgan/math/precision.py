@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Union, Tuple, Optional
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -39,19 +39,15 @@ class Error:
 
 
 def convert_pixel_to_um(
-        positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
-        pitch: float = ENV.pitch,
-        std_size: Tuple[int, int] = ENV.std_size,
-        clip_size: Tuple[int, int] = ENV.clip_size,
-        clip_bias: Tuple[int, int] = ENV.clip_bias
+    positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
+    pitch: float = ENV.pitch,
+    std_size: Tuple[int, int] = ENV.std_size,
+    clip_size: Tuple[int, int] = ENV.clip_size,
+    clip_bias: Tuple[int, int] = ENV.clip_bias,
 ) -> Union[np.ndarray, torch.Tensor, List[List[float]]]:
     centers = tuple(size / 2 * pitch for size in std_size)
     edges = tuple(center - (size / 4 - bias) * pitch for center, size, bias in zip(centers, clip_size, clip_bias))
-    conversions = [
-        lambda x: x * pitch + edges[0],
-        lambda y: y * pitch + edges[1],
-        lambda z: z
-    ]
+    conversions = [lambda x: x * pitch + edges[0], lambda y: y * pitch + edges[1], lambda z: z]
     um_positions = [[conversion(p) for p, conversion in zip(position, conversions)] for position in positions]
 
     if isinstance(positions, np.ndarray):
@@ -62,8 +58,8 @@ def convert_pixel_to_um(
 
 
 def calc_prediction_error(
-        real_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
-        pred_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
+    real_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
+    pred_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
 ) -> Error:
     distance_matrix = cdist(real_positions, pred_positions, metric="euclidean")
     row_ind, col_ind = linear_sum_assignment(distance_matrix)
@@ -72,9 +68,9 @@ def calc_prediction_error(
 
 
 def localization_prediction_errors(
-        real_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
-        pred_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
-        is_pixel: Optional[List[bool]] = None
+    real_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
+    pred_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
+    is_pixel: Optional[List[bool]] = None,
 ) -> Tuple[Error, Error, Error]:
     if is_pixel is None:
         is_pixel = [False, True]

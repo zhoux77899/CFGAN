@@ -5,12 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from .colors import BLACK, WHITE, get_color
-from .utils import axis_style_process_3d
 from ..common.env import ENV
 from ..common.utils import unify_positions_instance
 from ..math.precision import convert_pixel_to_um
-
+from .colors import BLACK, WHITE, get_color
+from .utils import axis_style_process_3d
 
 PITCH = ENV.pitch
 STD_SIZE = ENV.std_size
@@ -20,11 +19,11 @@ EDGES = tuple(center - image_size / 4 * PITCH for center, image_size in zip(CENT
 
 
 def plot_positions_grid(
-        *pred_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
-        real_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
-        labels: Optional[List[str]] = None,
-        is_pixel: Optional[List[bool]] = None,
-        figsize: Tuple[int, int] = (6, 3)
+    *pred_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
+    real_positions: Union[np.ndarray, torch.Tensor, List[List[float]]],
+    labels: Optional[List[str]] = None,
+    is_pixel: Optional[List[bool]] = None,
+    figsize: Tuple[int, int] = (6, 3),
 ) -> None:
     """
     Plot the predicted and real positions in a 3D grid.
@@ -65,7 +64,7 @@ def plot_positions_grid(
         facecolor=(1, 1, 1, 0),
         edgecolors=BLACK,
         label=labels[-1],
-        **scatter_args
+        **scatter_args,
     )
     # plot prediction positions
     for i, pred_position in enumerate(pred_positions):
@@ -79,7 +78,7 @@ def plot_positions_grid(
             s=15,
             color=get_color(i),
             label=labels[i],
-            **scatter_args
+            **scatter_args,
         )
     scatter.set_markerfacecolor = (1, 1, 1, 0)
 
@@ -91,10 +90,12 @@ def plot_positions_grid(
     ax.set_ylim(math.floor(EDGES[1]), math.ceil(2 * CENTERS[1] - EDGES[1]))
     ax.set_zlim(ENV.limit - ENV.bias, ENV.limit + ENV.bias)
 
-    plt.rcParams.update({
-        "grid.linewidth": 0.5,
-        "grid.color": [0, 0, 0, 0.1],
-    })
+    plt.rcParams.update(
+        {
+            "grid.linewidth": 0.5,
+            "grid.color": [0, 0, 0, 0.1],
+        }
+    )
 
     axis_style_process_3d(ax)
 

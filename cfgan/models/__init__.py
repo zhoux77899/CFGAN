@@ -1,1 +1,1 @@
-from .modeling_cfgan import UNetGenerator, CNNDiscriminator
+from .modeling_cfgan import CNNDiscriminator, UNetGenerator

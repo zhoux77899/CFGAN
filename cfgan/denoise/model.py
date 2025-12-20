@@ -8,13 +8,12 @@ from safetensors.torch import load_file
 from ..common.utils import get_image_dimension, set_image_dimension
 from ..models.modeling_cfgan import UNetGenerator
 
-
 IMAGE_DIMENSION = 4
 
 
 class CFGANModel:
     def __init__(self, model_path: Union[str, os.PathLike]) -> None:
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # Create model instance
         self.model = UNetGenerator()
         # Load weights from safetensors file using safetensors library
