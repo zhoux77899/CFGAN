@@ -25,10 +25,9 @@ def get_image_size(image: Union[np.ndarray, torch.Tensor], num_dimensions: int =
 def get_image_dimension(image: Union[np.ndarray, torch.Tensor]) -> int:
     if isinstance(image, np.ndarray):
         return image.ndim
-    elif isinstance(image, torch.Tensor):
+    if isinstance(image, torch.Tensor):
         return image.dim()
-    else:
-        raise TypeError("Input must be a `numpy.ndarray` or `torch.Tensor`")
+    raise TypeError("Input must be a `numpy.ndarray` or `torch.Tensor`")
 
 
 def set_image_dimension(
@@ -106,8 +105,34 @@ def set_image_size(
     return image
 
 
-def normalize(image: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
-    return (image - image.min()) / (image.max() - image.min())
+def normalize(
+    image: Union[np.ndarray, torch.Tensor],
+    eps: float = 1e-6,
+    per_image: bool = False,
+) -> Union[np.ndarray, torch.Tensor]:
+    assert get_image_dimension(image) in [2, 3], "`image` must be a 2D or 3D image"
+
+    if get_image_dimension(image) == 2 or not per_image:
+        img_min = image.min()
+        img_max = image.max()
+        norm = max(img_max - img_min, eps)
+        return (image - img_min) / norm
+
+    num_images = image.shape[0]
+
+    if isinstance(image, torch.Tensor):
+        img_min = image.view(num_images, -1).min(dim=1, keepdim=True)[0].view(num_images, 1, 1)
+        img_max = image.view(num_images, -1).max(dim=1, keepdim=True)[0].view(num_images, 1, 1)
+        norm = torch.maximum(img_max - img_min, torch.full_like(img_max, eps))
+        return (image - img_min) / norm
+
+    if isinstance(image, np.ndarray):
+        img_min = image.reshape(num_images, -1).min(axis=1, keepdims=True).reshape(num_images, 1, 1)
+        img_max = image.reshape(num_images, -1).max(axis=1, keepdims=True).reshape(num_images, 1, 1)
+        norm = np.maximum(img_max - img_min, eps)
+        return (image - img_min) / norm
+
+    raise TypeError("Input must be a `numpy.ndarray` or `torch.Tensor`")
 
 
 def unify_positions_instance(positions: Union[np.ndarray, torch.Tensor, List[List[float]]]) -> np.ndarray:
