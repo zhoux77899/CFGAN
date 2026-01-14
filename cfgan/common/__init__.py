@@ -34,7 +34,7 @@ def restrict_values(param_name: str, valid_values: List[Any]) -> Callable:
                         raise ValueError(f"Cannot determine value for parameter {param_name}")
             # check if the parameter value is within the valid range
             if value not in valid_values:
-                raise ValueError("Invalid value for {}. Choose from {}".format(param_name, valid_values))
+                raise ValueError(f"Invalid value for {param_name}. Choose from {valid_values}")
             return func(*args, **kwargs)
 
         return wrapper
