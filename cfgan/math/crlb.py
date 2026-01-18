@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 import numpy as np
 import torch
 
@@ -24,13 +22,6 @@ def normalize_to_probability_distribution(
         return per_image_normalized_imgs / sum_per_img
 
     raise TypeError(f"CRLB.normalize_to_probability_distribution() does not support {type(imgs)}")
-
-
-@dataclass
-class FisherInformation:
-    x: np.ndarray | torch.Tensor | None = None
-    y: np.ndarray | torch.Tensor | None = None
-    z: np.ndarray | torch.Tensor | None = None
 
 
 class CRLB:
@@ -95,20 +86,25 @@ class CRLB:
             return torch.sqrt(x)
         raise NotImplementedError(f"CRLB.sqrt() does not support {type(x)}")
 
-    def grad(self, direction: str) -> np.ndarray | torch.Tensor:
+    def grad(
+        self,
+        direction: str,
+        psf_imgs: np.ndarray | torch.Tensor | None = None,
+    ) -> np.ndarray | torch.Tensor:
         """
         Calculate the gradient of the CRLB with respect to the given direction.
         """
-        edge = 2
+        if psf_imgs is None:
+            psf_imgs = self.psf_imgs
 
         if direction == "x":
-            grad = (self.psf_imgs[:, :, edge:] - self.psf_imgs[:, :, :-edge]) / (2 * self.dx)
+            grad = (psf_imgs[:, :, 2:] - psf_imgs[:, :, :-2]) / (2 * self.dx)
             return self.pad(grad, (1, 1, 0, 0, 0, 0))
         if direction == "y":
-            grad = (self.psf_imgs[:, edge:, :] - self.psf_imgs[:, :-edge, :]) / (2 * self.dx)
+            grad = (psf_imgs[:, 2:, :] - psf_imgs[:, :-2, :]) / (2 * self.dx)
             return self.pad(grad, (0, 0, 1, 1, 0, 0))
         if direction == "z":
-            grad = (self.psf_imgs[edge:, :, :] - self.psf_imgs[:-edge, :, :]) / (2 * self.dz)
+            grad = (psf_imgs[2:, :, :] - psf_imgs[:-2, :, :]) / (2 * self.dz)
             return self.pad(grad, (0, 0, 0, 0, 1, 1))
 
         raise NotImplementedError(f"CRLB.grad() does not support direction {direction}")
@@ -119,29 +115,20 @@ class CRLB:
         background_photons: int,
         mode: str,
     ) -> np.ndarray | torch.Tensor:
-        denominator = self.psf_imgs * total_photons + background_photons
-        denominator = self.maximum(denominator)
-
-        fisher_info = FisherInformation()
-        if mode in ["lateral", "radial"]:
-            fisher_info.x = self.maximum((self.grad("x") ** 2 / denominator).sum((1, 2)))
-            fisher_info.y = self.maximum((self.grad("y") ** 2 / denominator).sum((1, 2)))
-        if mode in ["axial", "radial"]:
-            fisher_info.z = self.maximum((self.grad("z") ** 2 / denominator).sum((1, 2)))
+        psf_imgs = self.psf_imgs * total_photons
+        denominator = self.maximum(psf_imgs + background_photons)
 
         if mode == "lateral":
-            assert fisher_info.x is not None and fisher_info.y is not None
-            return self.sqrt(self.sqrt(1 / fisher_info.x) ** 2 + self.sqrt(1 / fisher_info.y) ** 2)
+            fx = self.maximum((self.grad("x", psf_imgs) ** 2 / denominator).sum((1, 2)))
+            fy = self.maximum((self.grad("y", psf_imgs) ** 2 / denominator).sum((1, 2)))
+            return self.sqrt(1 / fx + 1 / fy)
         if mode == "axial":
-            assert fisher_info.z is not None
-            return self.sqrt(1 / fisher_info.z)
+            fz = self.maximum((self.grad("z", psf_imgs) ** 2 / denominator).sum((1, 2)))
+            return self.sqrt(1 / fz)
         if mode == "radial":
-            assert fisher_info.x is not None and fisher_info.y is not None and fisher_info.z is not None
-            return self.sqrt(
-                (
-                    self.sqrt(1 / fisher_info.x) ** 2
-                    + self.sqrt(1 / fisher_info.y) ** 2
-                    + self.sqrt(1 / fisher_info.z) ** 2
-                )
-            )
+            fx = self.maximum((self.grad("x", psf_imgs) ** 2 / denominator).sum((1, 2)))
+            fy = self.maximum((self.grad("y", psf_imgs) ** 2 / denominator).sum((1, 2)))
+            fz = self.maximum((self.grad("z", psf_imgs) ** 2 / denominator).sum((1, 2)))
+            return self.sqrt(1 / fx + 1 / fy + 1 / fz)
+
         raise NotImplementedError(f"CRLB.forward() does not support mode {mode}")
