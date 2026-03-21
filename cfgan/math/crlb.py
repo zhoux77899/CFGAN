@@ -8,15 +8,16 @@ def normalize_to_probability_distribution(
     imgs: np.ndarray | torch.Tensor,
 ) -> np.ndarray | torch.Tensor:
     """
-    Normalize PSF images to probability distributions.
+    Normalize PSF images to a probability distribution.
+
+    This function normalizes the input 3D image tensor so that the sum of all its
+    elements equals 1.
 
     Args:
-        imgs: Input 3D array of shape (nz, ny, nx)
+        imgs: Input 3D array of shape (nz, ny, nx).
 
     Returns:
-        Normalized array where the sum depends on the mode:
-        - "global": Total sum = 1
-        - "per-slice": Each slice sums to 1
+        The normalized array.
     """
     assert get_image_dimension(imgs) == 3, "`imgs` must be a $z$-stack of images"
 
