@@ -46,7 +46,7 @@ class TestCRLBInitialization(unittest.TestCase):
 
         self.assertIsInstance(crlb.psf_imgs, np.ndarray)
         self.assertEqual(crlb.psf_imgs.shape, self.psf_shape)
-        self.assertAlmostEqual(crlb.psf_imgs.sum().item(), self.psf_shape[0], places=5)
+        self.assertAlmostEqual(crlb.psf_imgs.sum().item(), 1.0, places=5)
         self.assertEqual(crlb.dx, 0.1)
         self.assertEqual(crlb.dz, 0.5)
         self.assertEqual(crlb.eps, 1e-6)
@@ -58,7 +58,7 @@ class TestCRLBInitialization(unittest.TestCase):
 
         self.assertIsInstance(crlb.psf_imgs, torch.Tensor)
         self.assertEqual(crlb.psf_imgs.shape, self.psf_shape)
-        self.assertAlmostEqual(crlb.psf_imgs.sum().item(), self.psf_shape[0], places=5)
+        self.assertAlmostEqual(crlb.psf_imgs.sum().item(), 1.0, places=5)
         self.assertEqual(crlb.dx, 0.1)
         self.assertEqual(crlb.dz, 0.5)
         self.assertEqual(crlb.eps, 1e-6)

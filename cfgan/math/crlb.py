@@ -1,25 +1,17 @@
 import numpy as np
 import torch
 
-from cfgan.common.utils import get_image_dimension, normalize
+from cfgan.common.utils import get_image_dimension
 
 
 def normalize_to_probability_distribution(
     imgs: np.ndarray | torch.Tensor,
-    eps: float,
-    mode: str = "global",
 ) -> np.ndarray | torch.Tensor:
     """
     Normalize PSF images to probability distributions.
 
     Args:
         imgs: Input 3D array of shape (nz, ny, nx)
-        eps: Small value to prevent division by zero
-        mode: Normalization mode
-            - "global": Normalize entire 3D volume to sum to 1
-                       This preserves z-dependent intensity variations
-            - "per-slice": Normalize each z-slice independently to sum to 1
-                         This treats each slice as a separate probability distribution
 
     Returns:
         Normalized array where the sum depends on the mode:
@@ -28,25 +20,12 @@ def normalize_to_probability_distribution(
     """
     assert get_image_dimension(imgs) == 3, "`imgs` must be a $z$-stack of images"
 
-    if mode == "global":
-        if isinstance(imgs, np.ndarray):
-            return imgs / imgs.sum()
-        if isinstance(imgs, torch.Tensor):
-            return imgs / imgs.sum()
+    if isinstance(imgs, np.ndarray):
+        return imgs / imgs.sum()
+    if isinstance(imgs, torch.Tensor):
+        return imgs / imgs.sum()
 
-    if mode == "per-slice":
-        num_imgs = imgs.shape[0]
-        per_image_normalized_imgs = normalize(imgs, eps=eps, per_image=True)
-
-        if isinstance(per_image_normalized_imgs, np.ndarray):
-            sum_per_img = per_image_normalized_imgs.reshape(num_imgs, -1).sum(axis=1, keepdims=True).reshape(num_imgs, 1, 1)
-            return per_image_normalized_imgs / sum_per_img
-
-        if isinstance(per_image_normalized_imgs, torch.Tensor):
-            sum_per_img = per_image_normalized_imgs.view(num_imgs, -1).sum(dim=1, keepdim=True).view(num_imgs, 1, 1)
-            return per_image_normalized_imgs / sum_per_img
-
-    raise ValueError(f"Unknown normalization mode: {mode}. Use 'global' or 'per-slice'.")
+    raise ValueError(f"Unknown imgs type: {type(imgs)}.")
 
 
 class CRLB:
@@ -61,9 +40,6 @@ class CRLB:
         psf_imgs: 3D PSF array of shape (nz, ny, nx)
         delta: Tuple of (dx, dz) pixel sizes
         eps: Small value for numerical stability (default: 1e-6)
-        normalize_mode: Normalization mode for PSF
-            - "global": Normalize entire 3D volume to sum to 1 (default, recommended)
-            - "per-slice": Normalize each z-slice independently (legacy behavior)
     """
 
     def __init__(
@@ -71,16 +47,13 @@ class CRLB:
         psf_imgs: np.ndarray | torch.Tensor,
         delta: tuple[float, float],
         eps: float = 1e-6,
-        normalize_mode: str = "global",
     ) -> None:
         assert get_image_dimension(psf_imgs) == 3, "`psf_imgs` must be a $z$-stack of images"
         assert len(delta) == 2, "`delta` must be a 2-tuple of (dx, dz)"
-        assert normalize_mode in ["global", "per-slice"], "normalize_mode must be 'global' or 'per-slice'"
 
-        self.psf_imgs = normalize_to_probability_distribution(psf_imgs, eps=eps, mode=normalize_mode)
+        self.psf_imgs = normalize_to_probability_distribution(psf_imgs)
         self.dx, self.dz = delta
         self.eps = eps
-        self.normalize_mode = normalize_mode
 
     def __call__(
         self,
