@@ -10,6 +10,10 @@
 !.vscode/extensions.json
 *.code-workspace
 
+# Cursor
+/.cursor/
+.cursor/*
+
 # Trae
 /.trae/
 .trae/*
