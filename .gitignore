@@ -10,6 +10,10 @@
 !.vscode/extensions.json
 *.code-workspace
 
+# AI Agents
+/agents/
+.agents/*
+
 # Cursor
 /.cursor/
 .cursor/*

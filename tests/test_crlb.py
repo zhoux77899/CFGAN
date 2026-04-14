@@ -641,3 +641,116 @@ class TestCRLBNumericalEdgeCases(unittest.TestCase):
         result2 = self.crlb_numpy.forward(1000, 10, "lateral")
 
         np.testing.assert_array_equal(result1, result2)
+
+
+class TestCRLBNormalization(unittest.TestCase):
+    """Test CRLB normalization strategies."""
+
+    def setUp(self):
+        self.psf_shape = (200, 256, 256)
+        self.delta = (0.1, 0.5)
+        np.random.seed(42)
+        self.psf_data = np.random.rand(*self.psf_shape).astype(np.float64)
+        slice_sums = self.psf_data.sum(axis=(1, 2), keepdims=True)
+        self.psf_per_slice = self.psf_data / slice_sums
+        self.psf_global = self.psf_data / self.psf_data.sum()
+
+    def test_global_normalization(self):
+        """Test global normalization produces global sum of 1."""
+        crlb = CRLB(self.psf_data, self.delta, normalization="global")
+        self.assertAlmostEqual(crlb.psf_imgs.sum(), 1.0, places=5)
+
+    def test_global_normalization_torch(self):
+        """Test global normalization with torch tensor."""
+        psf_torch = torch.from_numpy(self.psf_data.copy())
+        crlb = CRLB(psf_torch, self.delta, normalization="global")
+        self.assertAlmostEqual(crlb.psf_imgs.sum().item(), 1.0, places=5)
+
+    def test_per_slice_normalization(self):
+        """Test per-slice normalization produces each slice sum of 1."""
+        crlb = CRLB(self.psf_data, self.delta, normalization="per_slice")
+        for k in range(self.psf_shape[0]):
+            self.assertAlmostEqual(crlb.psf_imgs[k].sum(), 1.0, places=5)
+
+    def test_per_slice_normalization_torch(self):
+        """Test per-slice normalization with torch tensor."""
+        psf_torch = torch.from_numpy(self.psf_data.copy())
+        crlb = CRLB(psf_torch, self.delta, normalization="per_slice")
+        for k in range(self.psf_shape[0]):
+            self.assertAlmostEqual(crlb.psf_imgs[k].sum().item(), 1.0, places=5)
+
+    def test_none_normalization(self):
+        """Test none normalization passes data through unchanged."""
+        crlb = CRLB(self.psf_per_slice, self.delta, normalization="none")
+        np.testing.assert_array_equal(crlb.psf_imgs, self.psf_per_slice)
+
+    def test_none_normalization_torch(self):
+        """Test none normalization with torch tensor."""
+        psf_torch = torch.from_numpy(self.psf_per_slice.copy())
+        crlb = CRLB(psf_torch, self.delta, normalization="none")
+        torch.testing.assert_close(crlb.psf_imgs, psf_torch)
+
+    def test_default_normalization_is_none(self):
+        """Test that default normalization is 'none'."""
+        crlb_default = CRLB(self.psf_data, self.delta)
+        crlb_none = CRLB(self.psf_data, self.delta, normalization="none")
+        np.testing.assert_array_equal(crlb_default.psf_imgs, crlb_none.psf_imgs)
+
+    def test_invalid_normalization(self):
+        """Test that invalid normalization raises ValueError."""
+        with self.assertRaises(ValueError):
+            CRLB(self.psf_data, self.delta, normalization="invalid")
+
+    def test_crlb_ratio_global_vs_per_slice(self):
+        """Test that global CRLB is larger than per-slice CRLB."""
+        crlb_global = CRLB(self.psf_data, self.delta, normalization="global")
+        crlb_per_slice = CRLB(self.psf_data, self.delta, normalization="per_slice")
+        result_global = crlb_global.forward(1000, 10, "lateral")
+        result_per_slice = crlb_per_slice.forward(1000, 10, "lateral")
+        ratio = result_global / result_per_slice
+        self.assertTrue(np.all(ratio > 1.0))
+        self.assertTrue(np.all(ratio < self.psf_shape[0] ** 2))
+
+    def test_per_slice_forward_no_nan(self):
+        """Test that per-slice normalization produces no NaN results."""
+        crlb = CRLB(self.psf_data, self.delta, normalization="per_slice")
+        result = crlb.forward(1000, 10, "radial")
+        self.assertFalse(np.any(np.isnan(result)))
+        self.assertFalse(np.any(np.isinf(result)))
+
+    def test_none_forward_no_nan(self):
+        """Test that none normalization produces no NaN results."""
+        crlb = CRLB(self.psf_per_slice, self.delta, normalization="none")
+        result = crlb.forward(1000, 10, "radial")
+        self.assertFalse(np.any(np.isnan(result)))
+        self.assertFalse(np.any(np.isinf(result)))
+
+    def test_negative_input_raises(self):
+        """Test that negative input raises AssertionError."""
+        psf_neg = self.psf_data.copy()
+        psf_neg[0, 0, 0] = -1.0
+        with self.assertRaises(AssertionError):
+            CRLB(psf_neg, self.delta, normalization="global")
+        with self.assertRaises(AssertionError):
+            CRLB(psf_neg, self.delta, normalization="per_slice")
+        with self.assertRaises(AssertionError):
+            CRLB(psf_neg, self.delta, normalization="none")
+
+    def test_zero_slice_raises(self):
+        """Test that a zero slice raises AssertionError for per_slice normalization."""
+        psf_zero_slice = self.psf_data.copy()
+        psf_zero_slice[0, :, :] = 0.0
+        with self.assertRaises(AssertionError):
+            CRLB(psf_zero_slice, self.delta, normalization="per_slice")
+
+    def test_per_slice_consistency_numpy_torch(self):
+        """Test that numpy and torch per-slice normalization are consistent."""
+        psf_torch = torch.from_numpy(self.psf_data.copy())
+        crlb_np = CRLB(self.psf_data, self.delta, normalization="per_slice")
+        crlb_torch = CRLB(psf_torch, self.delta, normalization="per_slice")
+        result_np = crlb_np.forward(1000, 10, "lateral")
+        result_torch = crlb_torch.forward(1000, 10, "lateral")
+        np.testing.assert_allclose(
+            result_np, result_torch.numpy(), rtol=1e-5, atol=1e-8,
+            err_msg="per_slice: numpy/torch results inconsistent",
+        )
