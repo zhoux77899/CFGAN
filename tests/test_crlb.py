@@ -690,11 +690,11 @@ class TestCRLBNormalization(unittest.TestCase):
         crlb = CRLB(psf_torch, self.delta, normalization="none")
         torch.testing.assert_close(crlb.psf_imgs, psf_torch)
 
-    def test_default_normalization_is_global(self):
-        """Test that default normalization is 'global' for backward compatibility."""
+    def test_default_normalization_is_none(self):
+        """Test that default normalization is 'none'."""
         crlb_default = CRLB(self.psf_data, self.delta)
-        crlb_global = CRLB(self.psf_data, self.delta, normalization="global")
-        np.testing.assert_array_equal(crlb_default.psf_imgs, crlb_global.psf_imgs)
+        crlb_none = CRLB(self.psf_data, self.delta, normalization="none")
+        np.testing.assert_array_equal(crlb_default.psf_imgs, crlb_none.psf_imgs)
 
     def test_invalid_normalization(self):
         """Test that invalid normalization raises ValueError."""
